@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RoomBooking.Api.Data;
+using RoomBooking.Api.Dtos;
 
 namespace RoomBooking.Api.Controllers;
 
@@ -16,10 +17,20 @@ public class RoomsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll()
-    {
-        var rooms = await _db.Rooms.ToListAsync();
+    [HttpGet]
+public async Task<IActionResult> GetAll()
+{
+    var rooms = await _db.Rooms
+        .Select(r => new RoomResponse(
+            r.Id,
+            r.Name,
+            r.Capacity,
+            r.Floor,
+            r.Equipment,
+            r.IsActive
+        ))
+        .ToListAsync();
 
-        return Ok(rooms);
-    }
+    return Ok(rooms);
+}
 }
