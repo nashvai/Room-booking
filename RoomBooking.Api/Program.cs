@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 using RoomBooking.Api.Data;
+using RoomBooking.Api.Options;
+using RoomBooking.Api.Validation;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +18,12 @@ builder.Services
 // Existing OpenAPI configuration.
 builder.Services.AddOpenApi();
 
+builder.Services.AddScoped<IBookingRule, MaxDurationRule>();
+builder.Services.AddScoped<IBookingRule, ActiveRoomRule>();
+
+builder.Services.Configure<BookingRulesOptions>(
+    builder.Configuration.GetSection(
+        BookingRulesOptions.SectionName));
 // Register the in-memory database.
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseInMemoryDatabase("RoomBookingDb"));
