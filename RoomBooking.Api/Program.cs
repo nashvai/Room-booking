@@ -1,32 +1,65 @@
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 using RoomBooking.Api.Data;
+using RoomBooking.Api.Dtos;
 using RoomBooking.Api.Options;
 using RoomBooking.Api.Validation;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Register controllers and serialize enums as strings.
+// Controllers and consistent request-validation errors.
 builder.Services
     .AddControllers()
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        options.InvalidModelStateResponseFactory = context =>
+        {
+            var message = context.ModelState
+                .Values
+                .SelectMany(value => value.Errors)
+                .Select(error =>
+                    !string.IsNullOrWhiteSpace(error.ErrorMessage)
+                        ? error.ErrorMessage
+                        : "The supplied value is invalid.")
+                .FirstOrDefault()
+                ?? "The request is invalid.";
+
+            return new BadRequestObjectResult(
+                new ApiError(
+                    ErrorCodes.InvalidRequest,
+                    message));
+        };
+    })
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.Converters.Add(
             new JsonStringEnumConverter());
     });
 
-// Existing OpenAPI configuration.
-builder.Services.AddOpenApi();
+// In-memory database.
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseInMemoryDatabase("RoomBookingDb"));
 
-builder.Services.AddScoped<IBookingRule, MaxDurationRule>();
-builder.Services.AddScoped<IBookingRule, ActiveRoomRule>();
-
+// Booking configuration.
 builder.Services.Configure<BookingRulesOptions>(
     builder.Configuration.GetSection(
         BookingRulesOptions.SectionName));
-// Register the in-memory database.
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseInMemoryDatabase("RoomBookingDb"));
+
+// Clock.
+builder.Services.AddSingleton(TimeProvider.System);
+
+// Booking validation rules.
+builder.Services.AddScoped<IBookingRule, TimeRangeRule>();
+builder.Services.AddScoped<IBookingRule, BookingHorizonRule>();
+builder.Services.AddScoped<IBookingRule, CapacityRule>();
+builder.Services.AddScoped<IBookingRule, MaxDurationRule>();
+builder.Services.AddScoped<IBookingRule, ActiveRoomRule>();
+builder.Services.AddScoped<IBookingRule, RoomOverlapRule>();
+builder.Services.AddScoped<IBookingRule, OrganizerOverlapRule>();
+
+// Validation service.
+builder.Services.AddScoped<BookingValidationService>();
 
 var app = builder.Build();
 
@@ -39,7 +72,7 @@ using (var scope = app.Services.CreateScope())
     DbSeeder.Seed(db);
 }
 
-// Configure the HTTP request pipeline.
+// OpenAPI.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -51,5 +84,3 @@ app.UseHttpsRedirection();
 app.MapControllers();
 
 app.Run();
-
-

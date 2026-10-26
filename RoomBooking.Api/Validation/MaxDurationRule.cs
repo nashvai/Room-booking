@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Options;
 using RoomBooking.Api.Dtos;
-using RoomBooking.Api.Models;
 using RoomBooking.Api.Options;
 
 namespace RoomBooking.Api.Validation;
@@ -9,6 +8,8 @@ public class MaxDurationRule : IBookingRule
 {
     private readonly BookingRulesOptions _options;
 
+    public int Order => BookingRuleOrder.MaxDuration;
+
     public MaxDurationRule(
         IOptions<BookingRulesOptions> options)
     {
@@ -16,18 +17,19 @@ public class MaxDurationRule : IBookingRule
     }
 
     public Task<ApiError?> CheckAsync(
-        CreateReservationRequest request,
-        Room room)
+        BookingValidationContext context)
     {
-        var duration = request.End - request.Start;
-        var maxDuration = TimeSpan.FromDays(
-            _options.MaxDurationDays);
+        var duration =
+            context.Request.End - context.Request.Start;
+
+        var maxDuration =
+            TimeSpan.FromDays(_options.MaxDurationDays);
 
         if (duration > maxDuration)
         {
             return Task.FromResult<ApiError?>(
                 new ApiError(
-                    "MAX_DURATION_EXCEEDED",
+                    ErrorCodes.MaxDurationExceeded,
                     $"A reservation cannot exceed {_options.MaxDurationDays} days."));
         }
 

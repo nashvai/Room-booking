@@ -1,20 +1,20 @@
 using RoomBooking.Api.Dtos;
-using RoomBooking.Api.Models;
 
 namespace RoomBooking.Api.Validation;
 
 public class ActiveRoomRule : IBookingRule
 {
+    public int Order => BookingRuleOrder.ActiveRoom;
+
     public Task<ApiError?> CheckAsync(
-        CreateReservationRequest request,
-        Room room)
+        BookingValidationContext context)
     {
-        if (!room.IsActive)
+        if (!context.Room.IsActive)
         {
             return Task.FromResult<ApiError?>(
                 new ApiError(
-                    "ROOM_INACTIVE",
-                    "Reservations cannot be created for inactive rooms."));
+                    ErrorCodes.RoomInactive,
+                    "The room is inactive and cannot be booked."));
         }
 
         return Task.FromResult<ApiError?>(null);
