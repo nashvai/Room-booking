@@ -58,5 +58,41 @@ public static class DbSeeder
         }
 
         db.SaveChanges();
+
+        if (!db.Reservations.Any())
+{
+    var roomA = db.Rooms.First(r => r.Name == "Conference Room A");
+    var roomB = db.Rooms.First(r => r.Name == "Meeting Room B");
+
+    var alex = db.Users.First(u => u.FirstName == "Alex");
+    var sam = db.Users.First(u => u.FirstName == "Sam");
+
+    var now = DateTimeOffset.UtcNow;
+
+    db.Reservations.AddRange(
+        new Reservation
+        {
+            RoomId = roomA.Id,
+            UserId = alex.Id,
+            Title = "Project Planning",
+            Start = now.AddHours(1),
+            End = now.AddHours(2),
+            Attendees = 5,
+            Status = ReservationStatus.Booked
+        },
+        new Reservation
+        {
+            RoomId = roomB.Id,
+            UserId = sam.Id,
+            Title = "Team Meeting",
+            Start = now.AddHours(3),
+            End = now.AddHours(4),
+            Attendees = 4,
+            Status = ReservationStatus.Booked
+        }
+    );
+
+    db.SaveChanges();
+}
     }
 }
