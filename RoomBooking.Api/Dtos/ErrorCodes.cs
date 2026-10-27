@@ -17,4 +17,5 @@ public static class ErrorCodes
     public const string RoomReservationOverlap = "ROOM_RESERVATION_OVERLAP";
     public const string OrganizerReservationOverlap = "ORGANIZER_RESERVATION_OVERLAP";
     public const string InvalidReservationState = "INVALID_RESERVATION_STATE";
+    public const string InvalidReportRange = "INVALID_REPORT_RANGE";
 }

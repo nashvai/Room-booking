@@ -5,6 +5,7 @@ using RoomBooking.Api.Data;
 using RoomBooking.Api.Dtos;
 using RoomBooking.Api.Options;
 using RoomBooking.Api.Validation;
+using RoomBooking.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,6 +47,14 @@ builder.Services.Configure<BookingRulesOptions>(
     builder.Configuration.GetSection(
         BookingRulesOptions.SectionName));
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("Frontend", policy =>
+        policy.WithOrigins("http://localhost:5173")
+              .AllowAnyHeader()
+              .AllowAnyMethod());
+});
+
 // Clock.
 builder.Services.AddSingleton(TimeProvider.System);
 
@@ -61,6 +70,8 @@ builder.Services.AddScoped<IBookingRule, OrganizerOverlapRule>();
 
 // Validation service.
 builder.Services.AddScoped<BookingValidationService>();
+builder.Services.AddScoped<UsageReportService>();
+
 
 var app = builder.Build();
 
@@ -72,6 +83,8 @@ using (var scope = app.Services.CreateScope())
 
     DbSeeder.Seed(db);
 }
+
+app.UseCors("Frontend");
 
 // OpenAPI.
 if (app.Environment.IsDevelopment())
