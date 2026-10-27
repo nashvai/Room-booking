@@ -49,6 +49,7 @@ builder.Services.Configure<BookingRulesOptions>(
 // Clock.
 builder.Services.AddSingleton(TimeProvider.System);
 
+
 // Booking validation rules.
 builder.Services.AddScoped<IBookingRule, TimeRangeRule>();
 builder.Services.AddScoped<IBookingRule, BookingHorizonRule>();
