@@ -1,20 +1,6 @@
 
-import { apiRequest } from "./client";
-
-export interface Room {
-  id: number;
-  name: string;
-  capacity: number;
-  floor: string;
-  equipment: string;
-  isActive: boolean;
-}
-
-export interface RoomFilters {
-  minCapacity?: number;
-  equipment?: number;
-  floor?: string;
-}
+import { request } from "./client";
+import type { Room, RoomFilters } from "../types/room";
 
 export async function getRooms(filters: RoomFilters = {}): Promise<Room[]> {
   const params = new URLSearchParams();
@@ -24,5 +10,5 @@ export async function getRooms(filters: RoomFilters = {}): Promise<Room[]> {
   if (filters.floor) params.set("floor", filters.floor);
 
   const query = params.toString();
-  return apiRequest<Room[]>(`/api/rooms${query ? `?${query}` : ""}`);
+  return request<Room[]>(`/api/rooms${query ? `?${query}` : ""}`);
 }
